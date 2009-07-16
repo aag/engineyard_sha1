@@ -15,7 +15,7 @@ main(int argc, char *argv[])
 	char ch_phrase[] = "I am not a big believer in fortune telling";
 	unsigned char ch_hash[EVP_MAX_MD_SIZE];
 
-	char mess1[] = "Rubinius one eight six active active record memcached exception JRuby DHH TOKYO sdfe3";
+	char mess1[] = "Rubinius one eight six active active record memcached exception JRuby DHH TOKYO";
 	unsigned char md_value[EVP_MAX_MD_SIZE];
 	int md_len, i;
 
@@ -41,26 +41,44 @@ main(int argc, char *argv[])
 	printf("\n");
 
 
-	// Test the speed of ONE MILLION hashes
+	// Make a copy of the message and padd it for the 5 trailing characters
+	int messLength = strlen(mess1);
+	char altMess1[messLength + 6]; // 1 space, 5 chars, 1 null
+
+	strncpy(altMess1, mess1, messLength);
+	altMess1[messLength] = ' ';
+
+	for (i = (messLength + 1); i <= (messLength + 5); i++)
+	{
+		altMess1[i] = '!';
+	}
+	altMess1[messLength + 6] = '\0';
+
+
 	unsigned int mindist = 1000;
 	unsigned int dist;
 	int j = 0;
-	for (j = 0; j < 1000000; j++)
+	int charPos1 = messLength + 1;
+	int altMessLength = strlen(altMess1);
+	for (i = 33; i < 126; i++)
 	{
+		altMess1[charPos1] = i;
+//DEBUG		printf("messLength: %i, altMess1: %s\n", messLength, altMess1);
+
 		// Hash mess1
 		EVP_DigestInit_ex(&mdctx, md, NULL);
-		EVP_DigestUpdate(&mdctx, mess1, strlen(mess1));
+		EVP_DigestUpdate(&mdctx, altMess1, altMessLength);
 		EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
 
 		EVP_MD_CTX_cleanup(&mdctx);
 
 		/*printf("Message hash is: ");
-		for(i = 0; i < md_len; i++)
+		for(j = 0; j < md_len; j++)
 		{
-			printf("%02x", md_value[i]);
+			printf("%02x", md_value[j]);
 		}
 		printf("\n");
-		*/
+	*/	
 		dist = hash_hamdist(ch_hash, md_value, md_len, mindist);
 
 		if (dist != -1)
@@ -69,7 +87,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	printf("Hamming Distance: %i\n", mindist);
+	printf("Lowest Hamming Distance: %i\n", mindist);
 }
 
 int hash_hamdist(unsigned char* x, unsigned char* y, int hash_len, unsigned int max)
