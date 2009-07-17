@@ -57,33 +57,55 @@ main(int argc, char *argv[])
 
 	unsigned int mindist = 1000;
 	unsigned int dist;
-	int j = 0;
+	int j, k, l, m, n;
 	int charPos1 = messLength + 1;
+	int charPos2 = messLength + 2;
+	int charPos3 = messLength + 3;
+	int charPos4 = messLength + 4;
+	int charPos5 = messLength + 5;
 	int altMessLength = strlen(altMess1);
+
 	for (i = 33; i < 126; i++)
 	{
 		altMess1[charPos1] = i;
 //DEBUG		printf("messLength: %i, altMess1: %s\n", messLength, altMess1);
-
-		// Hash mess1
-		EVP_DigestInit_ex(&mdctx, md, NULL);
-		EVP_DigestUpdate(&mdctx, altMess1, altMessLength);
-		EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
-
-		EVP_MD_CTX_cleanup(&mdctx);
-
-		/*printf("Message hash is: ");
-		for(j = 0; j < md_len; j++)
+		for (j = 33; j < 126; j++)
 		{
-			printf("%02x", md_value[j]);
-		}
-		printf("\n");
-	*/	
-		dist = hash_hamdist(ch_hash, md_value, md_len, mindist);
+			altMess1[charPos2] = j;
 
-		if (dist != -1)
-		{
-			mindist = dist;
+			for (k = 33; k < 126; k++)
+			{
+				altMess1[charPos3] = k;
+
+				for (l = 33; l < 126; l++)
+				{
+					altMess1[charPos4] = l;
+
+					for (m = 33; m < 126; m++)
+					{
+						altMess1[charPos5] = m;
+
+						// Hash mess1
+						EVP_DigestInit_ex(&mdctx, md, NULL);
+						EVP_DigestUpdate(&mdctx, altMess1, altMessLength);
+						EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
+
+						EVP_MD_CTX_cleanup(&mdctx);
+
+						dist = hash_hamdist(ch_hash, md_value, md_len, mindist);
+
+						if (dist != -1)
+						{
+							mindist = dist;
+
+							printf("Lower distance found (%u).\nMessage: %s Hash: ", dist, altMess1);
+							for(n = 0; n < md_len; n++)
+								printf("%02x", md_value[n]);
+							printf("\n");
+						}
+					}
+				}
+			}
 		}
 	}
 
