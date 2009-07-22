@@ -1,3 +1,33 @@
+/*
+A program to brute force the EngineYard SHA-1 hashing competition that was run
+on July 20-21, 2009.
+http://www.engineyard.com/blog/2009/programming-contest-win-iphone-3gs-2k-cloud-credit/
+
+Copyright (c) 2009, Adam Goforth
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * The name of the creator may not be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 #include <stdio.h>
 #include <openssl/evp.h>
 #include <string.h>
@@ -12,10 +42,11 @@ main(int argc, char *argv[])
 	const EVP_MD *md;
 
 	// The challenge phrase we want to match
-	char ch_phrase[] = "I am not a big believer in fortune telling";
+	char ch_phrase[] = "I would much rather hear more about your whittling project";
 	unsigned char ch_hash[EVP_MAX_MD_SIZE];
 
-	char mess1[] = "Rubinius one eight six active active record memcached exception JRuby DHH TOKYO";
+	// The starting phrase that we will permute and compare to the challenge phrase
+	char mess1[] = "parameter parameter parameter parameter parameter parameter parameter parameter parameter parameter parameter parameter";
 	unsigned char md_value[EVP_MAX_MD_SIZE];
 	int md_len, i;
 
@@ -41,9 +72,9 @@ main(int argc, char *argv[])
 	printf("\n");
 
 
-	// Make a copy of the message and padd it for the 5 trailing characters
+	// Make a copy of the message and pad it for the 5 trailing characters
 	int messLength = strlen(mess1);
-	char altMess1[messLength + 6]; // 1 space, 5 chars, 1 null
+	char altMess1[messLength + 6]; // 1 space + 5 chars + 1 null - 1 array counting offset
 
 	strncpy(altMess1, mess1, messLength);
 	altMess1[messLength] = ' ';
@@ -57,7 +88,7 @@ main(int argc, char *argv[])
 
 	unsigned int mindist = 1000;
 	unsigned int dist;
-	int j, k, l, m, n;
+	int j, k, l, m, n, p;
 	int charPos1 = messLength + 1;
 	int charPos2 = messLength + 2;
 	int charPos3 = messLength + 3;
@@ -65,43 +96,56 @@ main(int argc, char *argv[])
 	int charPos5 = messLength + 5;
 	int altMessLength = strlen(altMess1);
 
-	for (i = 33; i < 126; i++)
+	for (p = 0; p < messLength; p++)
 	{
-		altMess1[charPos1] = i;
-//DEBUG		printf("messLength: %i, altMess1: %s\n", messLength, altMess1);
-		for (j = 33; j < 126; j++)
+		if (altMess1[p] == ' ')
 		{
-			altMess1[charPos2] = j;
+			continue;
+		}
 
-			for (k = 33; k < 126; k++)
+		if ((altMess1[p] >= 97) && (altMess1[p] <= 122))
+		{
+			altMess1[p] -= 32;
+		}
+
+		for (i = 33; i < 126; i++)
+		{
+			altMess1[charPos1] = i;
+
+			for (j = 33; j < 126; j++)
 			{
-				altMess1[charPos3] = k;
+				altMess1[charPos2] = j;
 
-				for (l = 33; l < 126; l++)
+				for (k = 33; k < 126; k++)
 				{
-					altMess1[charPos4] = l;
+					altMess1[charPos3] = k;
 
-					for (m = 33; m < 126; m++)
+					for (l = 33; l < 126; l++)
 					{
-						altMess1[charPos5] = m;
+						altMess1[charPos4] = l;
 
-						// Hash mess1
-						EVP_DigestInit_ex(&mdctx, md, NULL);
-						EVP_DigestUpdate(&mdctx, altMess1, altMessLength);
-						EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
-
-						EVP_MD_CTX_cleanup(&mdctx);
-
-						dist = hash_hamdist(ch_hash, md_value, md_len, mindist);
-
-						if (dist != -1)
+						for (m = 33; m < 126; m++)
 						{
-							mindist = dist;
+							altMess1[charPos5] = m;
 
-							printf("Lower distance found (%u).\nMessage: %s Hash: ", dist, altMess1);
-							for(n = 0; n < md_len; n++)
-								printf("%02x", md_value[n]);
-							printf("\n");
+							// Hash mess1
+							EVP_DigestInit_ex(&mdctx, md, NULL);
+							EVP_DigestUpdate(&mdctx, altMess1, altMessLength);
+							EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
+
+							EVP_MD_CTX_cleanup(&mdctx);
+
+							dist = hash_hamdist(ch_hash, md_value, md_len, mindist);
+
+							if (dist != -1)
+							{
+								mindist = dist;
+
+								printf("Lower distance found (%u).\nMessage: %s Hash: ", dist, altMess1);
+								for(n = 0; n < md_len; n++)
+									printf("%02x", md_value[n]);
+								printf("\n");
+							}
 						}
 					}
 				}
