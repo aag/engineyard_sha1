@@ -6,6 +6,9 @@ http://www.engineyard.com/blog/2009/programming-contest-win-iphone-3gs-2k-cloud-
 The purpose of this program is not to have a maximally optimized cracker, but
 rather to see what could be done with reasonable design and minimal optimization.
 
+This code is free software licensed under the 3-Clause BSD license.  See main.c for
+the full license text.
+
 Compiling
 ---------
 Compilation was tested with gcc on Linux and Windows (under Cygwin).  OpenSSL
